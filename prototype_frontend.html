@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocean Disaster Detection System - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 40px;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: "📊";
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .image-upload {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+
+        .image-upload:hover {
+            border-color: #667eea;
+            background: #e8f0fe;
+        }
+
+        .image-upload.dragover {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .disaster-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .disaster-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .disaster-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .disaster-card.selected {
+            border-color: #28a745;
+            background: #d4edda;
+            transform: translateY(-3px);
+        }
+
+        .disaster-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .disaster-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .disaster-desc {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .results-section .section-title::before {
+            content: "🎯";
+        }
+
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .score {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .alert-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .alert-warning { background: #fff3cd; color: #856404; }
+        .alert-emergency { background: #f8d7da; color: #721c24; }
+        .alert-evacuation { background: #d1ecf1; color: #0c5460; }
+
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .image-preview img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .location-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .recommendations {
+            background: #f3e5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .recommendations ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .recommendations li {
+            margin-bottom: 5px;
+            color: #4a148c;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .disaster-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌊 Ocean Disaster Detection System</h1>
+            <p>AI-Powered Real-time Ocean Disaster Analysis & Alert System</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">Data Collection</h2>
+
+                <div class="form-group">
+                    <label>📸 Upload Geotagged Images</label>
+                    <div class="image-upload" id="imageUpload">
+                        <div class="upload-icon">📷</div>
+                        <p><strong>Click or drag images here</strong></p>
+                        <p>Upload multiple geotagged images from the disaster location</p>
+                        <input type="file" id="imageInput" multiple accept="image/*" style="display: none;">
+                    </div>
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>📝 Disaster Description</label>
+                    <textarea id="description" placeholder="Describe what you're witnessing... (e.g., 'Large waves hitting the shore, water rushing inland rapidly, people evacuating coastal areas')"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>🌊 Select Ocean Disaster Type</label>
+                    <div class="disaster-grid" id="disasterGrid">
+                        <!-- Disaster cards will be populated here -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>📍 Current Location</label>
+                    <input type="text" id="location" placeholder="Location will be detected automatically..." readonly>
+                    <button type="button" id="getLocation" style="margin-top: 10px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">📍 Get My Location</button>
+                </div>
+
+                <button class="analyze-btn" id="analyzeBtn">
+                    🔍 Analyze Disaster Report
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing your report using AI...</p>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <h2 class="section-title">Analysis Results</h2>
+                <div id="results">
+                    <p style="text-align: center; color: #6c757d; font-style: italic; padding: 40px;">
+                        📋 Upload images, provide description, and select disaster type to see AI analysis results here.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Ocean disasters data
+        const oceanDisasters = [
+            { id: 'tsunami', name: 'Tsunami', icon: '🌊', desc: 'Seismic sea waves' },
+            { id: 'hurricane', name: 'Hurricane', icon: '🌪️', desc: 'Tropical storm system' },
+            { id: 'storm_surge', name: 'Storm Surge', icon: '💨', desc: 'Storm-induced flooding' },
+            { id: 'coastal_flooding', name: 'Coastal Flooding', icon: '🏖️', desc: 'Tidal flooding' },
+            { id: 'rip_current', name: 'Rip Current', icon: '⚡', desc: 'Dangerous currents' },
+            { id: 'high_waves', name: 'High Waves', icon: '🌊', desc: 'Dangerous wave conditions' },
+            { id: 'algae_bloom', name: 'Algae Bloom', icon: '🦠', desc: 'Toxic algae outbreak' },
+            { id: 'oil_spill', name: 'Oil Spill', icon: '🛢️', desc: 'Marine contamination' },
+            { id: 'erosion', name: 'Coastal Erosion', icon: '🏔️', desc: 'Beach/cliff erosion' }
+        ];
+
+        let selectedDisaster = null;
+        let uploadedImages = [];
+        let currentLocation = null;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDisasterCards();
+            setupEventListeners();
+            getCurrentLocation();
+        });
+
+        function renderDisasterCards() {
+            const grid = document.getElementById('disasterGrid');
+            grid.innerHTML = '';
+
+            oceanDisasters.forEach(disaster => {
+                const card = document.createElement('div');
+                card.className = 'disaster-card';
+                card.dataset.id = disaster.id;
+                card.innerHTML = `
+                    <div class="disaster-icon">${disaster.icon}</div>
+                    <div class="disaster-name">${disaster.name}</div>
+                    <div class="disaster-desc">${disaster.desc}</div>
+                `;
+                
+                card.addEventListener('click', () => selectDisaster(disaster.id));
+                grid.appendChild(card);
+            });
+        }
+
+        function selectDisaster(disasterId) {
+            // Remove previous selection
+            document.querySelectorAll('.disaster-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Select new disaster
+            const selectedCard = document.querySelector(`[data-id="${disasterId}"]`);
+            selectedCard.classList.add('selected');
+            selectedDisaster = disasterId;
+        }
+
+        function setupEventListeners() {
+            const imageUpload = document.getElementById('imageUpload');
+            const imageInput = document.getElementById('imageInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const getLocationBtn = document.getElementById('getLocation');
+
+            // Image upload handlers
+            imageUpload.addEventListener('click', () => imageInput.click());
+            imageUpload.addEventListener('dragover', handleDragOver);
+            imageUpload.addEventListener('drop', handleDrop);
+            imageInput.addEventListener('change', handleImageSelect);
+
+            // Analyze button
+            analyzeBtn.addEventListener('click', analyzeDisasterReport);
+
+            // Get location button
+            getLocationBtn.addEventListener('click', getCurrentLocation);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            processImages(files);
+        }
+
+        function handleImageSelect(e) {
+            const files = Array.from(e.target.files);
+            processImages(files);
+        }
+
+        function processImages(files) {
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageData = {
+                        name: file.name,
+                        data: e.target.result,
+                        size: file.size,
+                        lastModified: new Date(file.lastModified)
+                    };
+                    uploadedImages.push(imageData);
+                    displayImagePreview(imageData);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function displayImagePreview(imageData) {
+            const preview = document.getElementById('imagePreview');
+            const img = document.createElement('img');
+            img.src = imageData.data;
+            img.title = imageData.name;
+            preview.appendChild(img);
+        }
+
+        function getCurrentLocation() {
+            const locationInput = document.getElementById('location');
+            
+            if (navigator.geolocation) {
+                locationInput.value = "📍 Getting location...";
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        currentLocation = {
+                            lat: position.coords.latitude,
+                            lon: position.coords.longitude,
+                            accuracy: position.coords.accuracy
+                        };
+                        locationInput.value = `📍 ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`;
+                    },
+                    function(error) {
+                        // Fallback to Chennai coordinates for demo
+                        currentLocation = { lat: 13.0827, lon: 80.2707 };
+                        locationInput.value = "📍 13.0827, 80.2707 (Demo Location - Chennai Coast)";
+                    }
+                );
+            } else {
+                // Fallback location
+                currentLocation = { lat: 13.0827, lon: 80.2707 };
+                locationInput.value = "📍 13.0827, 80.2707 (Demo Location - Chennai Coast)";
+            }
+        }
+
+        function analyzeDisasterReport() {
+            const description = document.getElementById('description').value;
+            const loading = document.getElementById('loading');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+
+            // Validation
+            if (!selectedDisaster && !description && uploadedImages.length === 0) {
+                alert('Please provide at least one input: images, description, or select a disaster type.');
+                return;
+            }
+
+            // Show loading
+            loading.classList.add('show');
+            analyzeBtn.disabled = true;
+
+            // Simulate AI processing delay
+            setTimeout(() => {
+                const results = processDisasterAnalysis();
+                displayResults(results);
+                loading.classList.remove('show');
+                analyzeBtn.disabled = false;
+            }, 2000);
+        }
+
+        function processDisasterAnalysis() {
+            const description = document.getElementById('description').value;
+            
+            // Mock AI analysis based on inputs
+            let confidence = 0.5;
+            let reliability = 0.4;
+            let detectedDisaster = selectedDisaster || 'unknown';
+            
+            // Enhance scores based on available data
+            if (description) confidence += 0.2;
+            if (uploadedImages.length > 0) confidence += 0.2;
+            if (currentLocation) reliability += 0.2;
+            if (selectedDisaster) reliability += 0.3;
+            
+            // Description analysis
+            if (description) {
+                const keywords = description.toLowerCase();
+                if (keywords.includes('tsunami') || keywords.includes('wave') || keywords.includes('sea')) {
+                    detectedDisaster = 'tsunami';
+                    confidence += 0.1;
+                }
+                if (keywords.includes('storm') || keywords.includes('wind') || keywords.includes('hurricane')) {
+                    detectedDisaster = 'hurricane';
+                    confidence += 0.1;
+                }
+                if (keywords.includes('flood') || keywords.includes('water')) {
+                    detectedDisaster = 'coastal_flooding';
+                    confidence += 0.1;
+                }
+                if (keywords.includes('oil') || keywords.includes('spill') || keywords.includes('pollution')) {
+                    detectedDisaster = 'oil_spill';
+                    confidence += 0.1;
+                }
+            }
+
+            // Cap scores at 1.0
+            confidence = Math.min(confidence, 1.0);
+            reliability = Math.min(reliability, 1.0);
+
+            // Determine alert level
+            let alertLevel = 1; // Warning
+            let alertName = 'WARNING';
+            
+            if (detectedDisaster === 'tsunami' || detectedDisaster === 'hurricane') {
+                alertLevel = 3;
+                alertName = 'EVACUATION';
+            } else if (detectedDisaster === 'storm_surge' || detectedDisaster === 'oil_spill') {
+                alertLevel = 2;
+                alertName = 'EMERGENCY';
+            }
+
+            return {
+                disaster_type: detectedDisaster,
+                confidence_score: confidence,
+                reliability_score: reliability,
+                alert_level: alertLevel,
+                alert_name: alertName,
+                location: currentLocation,
+                description: description,
+                images_count: uploadedImages.length,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            const disaster = oceanDisasters.find(d => d.id === results.disaster_type) || 
+                           { name: 'Unknown', icon: '❓', desc: 'Unknown disaster type' };
+            
+            const alertClass = results.alert_level === 1 ? 'alert-warning' : 
+                              results.alert_level === 2 ? 'alert-emergency' : 'alert-evacuation';
+
+            const recommendations = getRecommendations(results.disaster_type, results.alert_level);
+
+            resultsDiv.innerHTML = `
+                <div class="result-item">
+                    <div class="result-header">
+                        <div class="result-title">${disaster.icon} ${disaster.name}</div>
+                        <div class="alert-badge ${alertClass}">${results.alert_name}</div>
+                    </div>
+                    <p>${disaster.desc}</p>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-header">
+                        <div class="result-title">🎯 Confidence Score</div>
+                        <div class="score">${(results.confidence_score * 100).toFixed(1)}%</div>
+                    </div>
+                    <p>AI confidence in disaster type identification</p>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-header">
+                        <div class="result-title">✅ Reliability Score</div>
+                        <div class="score">${(results.reliability_score * 100).toFixed(1)}%</div>
+                    </div>
+                    <p>Overall reliability based on available data quality</p>
+                </div>
+
+                <div class="location-info">
+                    <h4>📍 Location Analysis</h4>
+                    <p><strong>Coordinates:</strong> ${results.location ? `${results.location.lat.toFixed(4)}, ${results.location.lon.toFixed(4)}` : 'Not available'}</p>
+                    <p><strong>Images Analyzed:</strong> ${results.images_count}</p>
+                    <p><strong>Analysis Time:</strong> ${new Date(results.timestamp).toLocaleString()}</p>
+                </div>
+
+                <div class="recommendations">
+                    <h4>⚠️ Recommended Actions</h4>
+                    <ul>
+                        ${recommendations.map(action => `<li>${action}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        function getRecommendations(disasterType, alertLevel) {
+            const recommendations = {
+                'tsunami': {
+                    1: ['Monitor official tsunami warnings', 'Review evacuation routes', 'Stay informed through official channels'],
+                    2: ['Move to higher ground immediately', 'Stay away from beaches and coastal areas', 'Follow emergency broadcasts'],
+                    3: ['EVACUATE IMMEDIATELY to high ground', 'Do not return until all-clear is given', 'Assist others in evacuation']
+                },
+                'hurricane': {
+                    1: ['Secure outdoor items', 'Stock emergency supplies', 'Monitor weather updates'],
+                    2: ['Stay indoors', 'Avoid coastal areas', 'Prepare for power outages'],
+                    3: ['EVACUATE if in evacuation zones', 'Follow official evacuation orders', 'Go to emergency shelters']
+                },
+                'oil_spill': {
+                    1: ['Avoid affected water areas', 'Report observations to authorities'],
+                    2: ['Stay away from contaminated areas', 'Avoid seafood from affected areas'],
+                    3: ['Follow health advisories', 'Evacuate if air quality is dangerous']
+                }
+            };
+
+            const defaultRecs = {
+                1: ['Stay alert', 'Monitor official channels', 'Take basic precautions'],
+                2: ['Take immediate precautions', 'Avoid affected areas', 'Follow official guidance'],
+                3: ['Follow evacuation orders if issued', 'Seek immediate safety', 'Contact emergency services']
+            };
+
+            return recommendations[disasterType]?.[alertLevel] || defaultRecs[alertLevel] || defaultRecs[1];
+        }
+    </script>
+</body>
+</html>

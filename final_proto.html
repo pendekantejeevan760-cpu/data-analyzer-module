@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cognitive Radio Spectrum Sensing - ML Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .nav-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #4CAF50;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #667eea;
+        }
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 1rem;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .graphs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .graph-container {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            height: 400px;
+        }
+        .graph-title {
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            text-align: center;
+        }
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+        .control-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .control-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        .control-input:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: linear-gradient(135deg, #95e1d3 0%, #4ecdc4 100%);
+            color: #2c3e50;
+        }
+        .slider-container {
+            margin: 1rem 0;
+        }
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+        .search-bar {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 3rem 0.75rem 1rem;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+        }
+        .search-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .performance-indicators {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .indicator {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .indicator-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .indicator-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        .time-series-container {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .user-dashboard {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+        .status-free {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .status-clustered {
+            color: #FF9800;
+            font-weight: bold;
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1100;
+            display: none;
+            text-align: center;
+            transition: all 0.3s ease-in-out;
+            opacity: 0;
+        }
+        .message-box.show {
+            display: block;
+            opacity: 1;
+        }
+        .message-box.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .message-box.warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        @media (max-width: 1200px) {
+            .graphs-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .graphs-grid {
+                grid-template-columns: 1fr;
+            }
+            .performance-indicators {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="messageBox" class="message-box"></div>
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-broadcast-tower"></i>
+            Cognitive Radio Spectrum Sensing Dashboard
+        </div>
+        <div class="nav-controls">
+            <div class="status-indicator">
+                <i class="fas fa-circle"></i>
+                <span id="systemStatus">System Active</span>
+            </div>
+            <button class="btn" onclick="refreshData()">
+                <i class="fas fa-sync-alt"></i>
+                Refresh
+            </button>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="dashboard-grid">
+            <div class="main-content">
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('overview', this)">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard Overview
+                    </button>
+                    <button class="tab" onclick="showTab('frequencies', this)">
+                        <i class="fas fa-wifi"></i> Frequency Management
+                    </button>
+                    <button class="tab" onclick="showTab('models', this)">
+                        <i class="fas fa-brain"></i> Model Performance
+                    </button>
+                    <button class="tab" onclick="showTab('analytics', this)">
+                        <i class="fas fa-chart-line"></i> Analytics
+                    </button>
+                    <button class="tab" onclick="showTab('qos', this)">
+                        <i class="fas fa-signal"></i> QoS Monitoring
+                    </button>
+                    <button class="tab" onclick="showTab('users', this)">
+                        <i class="fas fa-users"></i> User Management
+                    </button>
+                </div>
+                <div id="overview" class="tab-content active">
+                    <div class="section-title">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Live System Overview
+                    </div>
+                    <div class="performance-indicators">
+                        <div class="indicator">
+                            <div class="indicator-value" id="overallAccuracy">94.7%</div>
+                            <div class="indicator-label">Overall Accuracy</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-value" id="avgLatency">12.3ms</div>
+                            <div class="indicator-label">Avg Latency</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-value" id="callDropRate">0.8%</div>
+                            <div class="indicator-label">Call Drop Rate</div>
+                        </div>
+                        <div class="indicator">
+                            <div class="indicator-value" id="throughput">85.2%</div>
+                            <div class="indicator-label">Throughput</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3><i class="fas fa-satellite-dish"></i> Live Spectrum Data Feed</h3>
+                        <div class="graphs-grid">
+                            <div class="graph-container">
+                                <div class="graph-title">Real-time Spectrum Status</div>
+                                <canvas id="liveSpectrumChart"></canvas>
+                            </div>
+                            <div class="graph-container">
+                                <div class="graph-title">Signal Strength Monitor</div>
+                                <canvas id="signalStrengthChart"></canvas>
+                            </div>
+                            <div class="graph-container">
+                                <div class="graph-title">Detection Probability</div>
+                                <canvas id="detectionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3><i class="fas fa-chart-bar"></i> Statistical Analysis</h3>
+                        <div class="stats-grid">
+                            <div>
+                                <h4>Dataset Statistics</h4>
+                                <table class="data-table">
+                                    <tr><td><strong>Total Samples:</strong></td><td id="totalSamples">10,000</td></tr>
+                                    <tr><td><strong>Features:</strong></td><td id="totalFeatures">15</td></tr>
+                                    <tr><td><strong>Class Balance:</strong></td><td id="classBalance">52% / 48%</td></tr>
+                                    <tr><td><strong>Missing Values:</strong></td><td id="missingValues">0</td></tr>
+                                </table>
+                            </div>
+                            <div>
+                                <h4>Performance Metrics</h4>
+                                <table class="data-table">
+                                    <tr><td><strong>Precision:</strong></td><td id="precision">0.947</td></tr>
+                                    <tr><td><strong>Recall:</strong></td><td id="recall">0.943</td></tr>
+                                    <tr><td><strong>F1-Score:</strong></td><td id="f1Score">0.945</td></tr>
+                                    <tr><td><strong>AUC-ROC:</strong></td><td id="aucRoc">0.987</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="frequencies" class="tab-content">
+                    <div class="section-title">
+                        <i class="fas fa-wifi"></i>
+                        Frequency & Bandwidth Status
+                    </div>
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                            <h3>Live Frequency Table</h3>
+                            <button class="btn" onclick="rerouteAll()">
+                                <i class="fas fa-route"></i> Reroute All Clustered Signals
+                            </button>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)"></th>
+                                    <th>Signal ID</th>
+                                    <th>Frequency (MHz)</th>
+                                    <th>Bandwidth (MHz)</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="frequencyTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                    <div class="card" style="margin-top: 2rem;">
+                        <h3>Selected Signals Rerouting</h3>
+                        <div class="control-group">
+                            <label class="control-label">Select a Free Bandwidth:</label>
+                            <select class="control-input" id="rerouteBandwidthSelect">
+                                </select>
+                        </div>
+                        <button class="btn btn-secondary" onclick="rerouteSelected()">
+                            <i class="fas fa-share-alt"></i> Reroute Selected Signals
+                        </button>
+                    </div>
+                </div>
+                <div id="models" class="tab-content">
+                    <div class="section-title">
+                        <i class="fas fa-brain"></i>
+                        Model Performance & Comparison
+                    </div>
+                    <div class="graphs-grid">
+                        <div class="graph-container">
+                            <div class="graph-title">Model Accuracy Comparison</div>
+                            <canvas id="modelAccuracyChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">AUC-ROC Comparison</div>
+                            <canvas id="aucComparisonChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">Cross-Validation Scores</div>
+                            <canvas id="cvScoresChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">Precision-Recall-F1</div>
+                            <canvas id="metricsChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">Confusion Matrix</div>
+                            <canvas id="confusionMatrixChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">ROC Curves</div>
+                            <canvas id="rocCurveChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3><i class="fas fa-star"></i> Feature Importance Analysis</h3>
+                        <div class="graphs-grid">
+                            <div class="graph-container">
+                                <div class="graph-title">Feature Importance</div>
+                                <canvas id="featureImportanceChart"></canvas>
+                            </div>
+                            <div class="graph-container">
+                                <div class="graph-title">Feature Correlation</div>
+                                <canvas id="correlationChart"></canvas>
+                            </div>
+                            <div class="graph-container">
+                                <div class="graph-title">Feature Distribution</div>
+                                <canvas id="featureDistChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="analytics" class="tab-content">
+                    <div class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        Advanced Analytics
+                    </div>
+                    <div class="graphs-grid">
+                        <div class="graph-container">
+                            <div class="graph-title">Pfa vs Pd Trade-off</div>
+                            <canvas id="pfaPdChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">Latency Distribution</div>
+                            <canvas id="latencyChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">Frequency Band Analysis</div>
+                            <canvas id="frequencyChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">SNR Analysis</div>
+                            <canvas id="snrChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">Target Distribution</div>
+                            <canvas id="targetDistChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">PU Presence Analysis</div>
+                            <canvas id="puPresenceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div id="qos" class="tab-content">
+                    <div class="section-title">
+                        <i class="fas fa-signal"></i>
+                        Quality of Service Monitoring
+                    </div>
+                    <div class="time-series-container">
+                        <h3><i class="fas fa-clock"></i> QoS Metrics Over Time</h3>
+                        <canvas id="qosTimeSeriesChart" style="height: 300px;"></canvas>
+                    </div>
+                    <div class="graphs-grid">
+                        <div class="graph-container">
+                            <div class="graph-title">Successful Connections</div>
+                            <canvas id="connectionsChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">Interference Events</div>
+                            <canvas id="interferenceChart"></canvas>
+                        </div>
+                        <div class="graph-container">
+                            <div class="graph-title">Bandwidth Utilization</div>
+                            <canvas id="bandwidthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div id="users" class="tab-content">
+                    <div class="section-title">
+                        <i class="fas fa-users"></i>
+                        User Management
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" class="search-input" id="userSearch" placeholder="Search for specific user ID..." onkeyup="searchUser()">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
+                    <div class="user-dashboard" id="userDashboard">
+                        <h3>User-Specific Analysis </h3>
+                        <div id="userInfo" class="alert alert-warning">
+                            <i class="fas fa-info-circle"></i>
+                            Enter a User ID above to view specific user analytics
+                        </div>
+                        <canvas id="userSpecificChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar">
+                <div class="card">
+                    <h3><i class="fas fa-upload"></i> Data Upload</h3>
+                    <input type="file" id="fileUpload" accept=".csv" class="control-input" onchange="handleFileUpload(event)">
+                    <div class="alert alert-success" id="uploadStatus" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        File uploaded successfully!
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-cog"></i> Model Selection</h3>
+                    <div class="control-group">
+                        <label class="control-label">Active Model:</label>
+                        <select class="control-input" id="modelSelect" onchange="changeModel()">
+                            <option value="random_forest">Random Forest</option>
+                            <option value="gradient_boosting">Gradient Boosting</option>
+                            <option value="svm">Support Vector Machine</option>
+                            <option value="neural_network">Neural Network</option>
+                            <option value="logistic_regression">Logistic Regression</option>
+                        </select>
+                    </div>
+                    <button class="btn" onclick="retrainModel()">
+                        <i class="fas fa-play"></i>
+                        Retrain Model
+                    </button>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-sliders-h"></i> Threshold Adjustment</h3>
+                    <div class="control-group">
+                        <label class="control-label">Detection Threshold: <span id="detectionValue">0.5</span></label>
+                        <input type="range" class="slider" id="detectionThreshold" min="0.1" max="0.9" step="0.01" value="0.5" oninput="updateThreshold('detection', this.value)">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Sensitivity: <span id="sensitivityValue">0.7</span></label>
+                        <input type="range" class="slider" id="sensitivity" min="0.1" max="1.0" step="0.01" value="0.7" oninput="updateThreshold('sensitivity', this.value)">
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">False Alarm Rate: <span id="farValue">0.05</span></label>
+                        <input type="range" class="slider" id="falseAlarmRate" min="0.01" max="0.2" step="0.01" value="0.05" oninput="updateThreshold('far', this.value)">
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="livePredictions">156</div>
+                    <div class="metric-label">Live Predictions/min</div>
+                </div>
+                <div class="metric-card" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);">
+                    <div class="metric-value" id="spectrumUtilization">73%</div>
+                    <div class="metric-label">Spectrum Utilization</div>
+                </div>
+                <div class="metric-card" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);">
+                    <div class="metric-value" id="interferenceLevel">Low</div>
+                    <div class="metric-label">Interference Level</div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-filter"></i> Data Filtering</h3>
+                    <div class="control-group">
+                        <label class="control-label">Frequency Band (MHz):</label>
+                        <select class="control-input" id="frequencyFilter" onchange="applyFilter()">
+                            <option value="all">All Bands</option>
+                            <option value="2400">2400 MHz</option>
+                            <option value="5000">5000 MHz</option>
+                            <option value="900">900 MHz</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Time Range:</label>
+                        <select class="control-input" id="timeFilter" onchange="applyFilter()">
+                            <option value="1h">Last Hour</option>
+                            <option value="6h">Last 6 Hours</option>
+                            <option value="24h">Last 24 Hours</option>
+                            <option value="7d">Last 7 Days</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-secondary" onclick="resetFilters()">
+                        <i class="fas fa-undo"></i>
+                        Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Global variables
+        let charts = {};
+        let currentModel = 'random_forest';
+        let liveDataInterval;
+        let userData = {
+            'user123': {
+                labels: ['12:00', '12:15', '12:30', '12:45', '13:00', '13:15'],
+                data: [0.85, 0.91, 0.88, 0.93, 0.90, 0.92]
+            },
+            'user456': {
+                labels: ['12:00', '12:15', '12:30', '12:45', '13:00', '13:15'],
+                data: [0.75, 0.80, 0.78, 0.85, 0.82, 0.88]
+            }
+        };
+        let currentFrequencyData = [];
+        let freeBandUsage = {};
+        const signalsPerBandwidth = 10; // Number of signals to group per bandwidth
+        let availableFreeBandwidths = []; // Array to store available free bandwidths
+        
+        // Sample data for demonstration
+        const sampleData = {
+            models: ['Random Forest', 'Gradient Boosting', 'SVM', 'Neural Network', 'Logistic Regression'],
+            accuracy: [0.947, 0.923, 0.915, 0.934, 0.889],
+            auc: [0.987, 0.976, 0.968, 0.981, 0.945],
+            precision: [0.947, 0.925, 0.918, 0.935, 0.892],
+            recall: [0.943, 0.921, 0.912, 0.932, 0.885],
+            f1Score: [0.945, 0.923, 0.915, 0.933, 0.888],
+            features: ['PU_Signal_Strength', 'SNR_SU1', 'SNR_SU2', 'SNR_SU3', 'Pd', 'Pfa', 'Pmd', 'PU_Presence'],
+            importance: [0.234, 0.187, 0.156, 0.143, 0.098, 0.087, 0.065, 0.030],
+            confusionMatrix: [
+                [850, 50],
+                [30, 70]
+            ],
+            pfaPdData: {
+                pfa: [0.01, 0.05, 0.1, 0.2, 0.3],
+                pd: [0.75, 0.88, 0.92, 0.95, 0.97]
+            },
+            latencyData: [10.2, 11.5, 12.3, 9.8, 13.1, 14.5, 10.9, 11.8, 12.9, 13.5],
+            frequencyData: {
+                labels: ['900 MHz', '2400 MHz', '5000 MHz'],
+                data: [40, 55, 30]
+            },
+            snrData: {
+                labels: ['-10dB', '-5dB', '0dB', '5dB', '10dB'],
+                data: [15, 20, 35, 25, 5]
+            },
+            targetDist: {
+                labels: ['No PU (0)', 'PU Present (1)'],
+                data: [5200, 4800]
+            },
+            puPresence: {
+                labels: ['12 AM', '3 AM', '6 AM', '9 AM', '12 PM', '3 PM', '6 PM', '9 PM'],
+                data: [10, 20, 35, 60, 80, 75, 50, 30]
+            },
+            qosData: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                throughput: [80, 82, 78, 85, 88, 92, 90],
+                latency: [15, 12, 18, 11, 10, 9, 11],
+                dropRate: [1.2, 0.9, 1.5, 0.8, 0.7, 0.5, 0.6]
+            },
+            connections: {
+                labels: ['2G', '3G', '4G', '5G'],
+                data: [1500, 2500, 4000, 5500]
+            },
+            interference: {
+                labels: ['Low', 'Medium', 'High'],
+                data: [75, 20, 5]
+            },
+            bandwidth: {
+                labels: ['10 MHz', '20 MHz', '40 MHz', '80 MHz'],
+                data: [15, 25, 40, 20]
+            }
+        };
+
+        function showMessage(message, type = 'success') {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type} show`;
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Initialize dashboard
+        function initializeDashboard() {
+            initializeCharts();
+            updateMetrics();
+            loadDummySDRData();
+        }
+        // Tab switching
+        function showTab(tabName, clickedTab) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            // Add active class to clicked tab
+            clickedTab.classList.add('active');
+        }
+        // Generate time labels
+        function generateTimeLabels(count) {
+            const labels = [];
+            const now = new Date();
+            for (let i = count - 1; i >= 0; i--) {
+                const time = new Date(now.getTime() - i * 1000);
+                labels.push(time.toLocaleTimeString());
+            }
+            return labels;
+        }
+        // Initialize charts
+        function initializeCharts() {
+            // Live Spectrum Chart
+            const liveCtx = document.getElementById('liveSpectrumChart').getContext('2d');
+            charts.liveSpectrum = new Chart(liveCtx, {
+                type: 'line',
+                data: {
+                    labels: generateTimeLabels(50),
+                    datasets: [{
+                        label: 'Spectrum Status (Occupied)',
+                        data: Array(50).fill(0),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Occupancy (%)'
+                            }
+                        }
+                    }
+                }
+            });
+            // Signal Strength Chart
+            const signalCtx = document.getElementById('signalStrengthChart').getContext('2d');
+            charts.signalStrength = new Chart(signalCtx, {
+                type: 'line',
+                data: {
+                    labels: generateTimeLabels(50),
+                    datasets: [{
+                        label: 'Signal Strength (dBm)',
+                        data: Array(50).fill(0),
+                        borderColor: '#4ecdc4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.2)',
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        y: {
+                            min: -120,
+                            max: -30,
+                            title: {
+                                display: true,
+                                text: 'Signal Strength (dBm)'
+                            }
+                        }
+                    }
+                }
+            });
+            // Detection Probability Chart
+            const detectionCtx = document.getElementById('detectionChart').getContext('2d');
+            charts.detection = new Chart(detectionCtx, {
+                type: 'line',
+                data: {
+                    labels: generateTimeLabels(50),
+                    datasets: [{
+                        label: 'Detection Probability (Pd)',
+                        data: Array(50).fill(0.9),
+                        borderColor: '#FF9800',
+                        backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        y: {
+                            min: 0.5,
+                            max: 1.0,
+                            title: {
+                                display: true,
+                                text: 'Probability'
+                            }
+                        }
+                    }
+                }
+            });
+            // Model Accuracy Comparison
+            const modelAccCtx = document.getElementById('modelAccuracyChart').getContext('2d');
+            charts.modelAccuracy = new Chart(modelAccCtx, {
+                type: 'bar',
+                data: {
+                    labels: sampleData.models,
+                    datasets: [{
+                        label: 'Accuracy',
+                        data: sampleData.accuracy,
+                        backgroundColor: ['#667eea', '#764ba2', '#4ecdc4', '#ff6b6b', '#feca57']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0.8,
+                            max: 1.0,
+                            title: {
+                                display: true,
+                                text: 'Accuracy'
+                            }
+                        }
+                    }
+                }
+            });
+            // AUC-ROC Comparison
+            const aucCtx = document.getElementById('aucComparisonChart').getContext('2d');
+            charts.aucComparison = new Chart(aucCtx, {
+                type: 'bar',
+                data: {
+                    labels: sampleData.models,
+                    datasets: [{
+                        label: 'AUC-ROC',
+                        data: sampleData.auc,
+                        backgroundColor: ['#667eea', '#764ba2', '#4ecdc4', '#ff6b6b', '#feca57']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0.9,
+                            max: 1.0,
+                            title: {
+                                display: true,
+                                text: 'AUC-ROC'
+                            }
+                        }
+                    }
+                }
+            });
+            // Cross-Validation Scores (Example)
+            const cvCtx = document.getElementById('cvScoresChart').getContext('2d');
+            charts.cvScores = new Chart(cvCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Fold 1', 'Fold 2', 'Fold 3', 'Fold 4', 'Fold 5'],
+                    datasets: [{
+                        label: 'Random Forest CV Accuracy',
+                        data: [0.945, 0.951, 0.942, 0.948, 0.950],
+                        borderColor: '#667eea',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0.9,
+                            max: 1.0,
+                            title: {
+                                display: true,
+                                text: 'Accuracy'
+                            }
+                        }
+                    }
+                }
+            });
+            // Precision-Recall-F1
+            const metricsCtx = document.getElementById('metricsChart').getContext('2d');
+            charts.metrics = new Chart(metricsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Precision', 'Recall', 'F1-Score'],
+                    datasets: [{
+                        label: 'Random Forest',
+                        data: [sampleData.precision[0], sampleData.recall[0], sampleData.f1Score[0]],
+                        backgroundColor: '#667eea'
+                    }, {
+                        label: 'Gradient Boosting',
+                        data: [sampleData.precision[1], sampleData.recall[1], sampleData.f1Score[1]],
+                        backgroundColor: '#4ecdc4'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0.8,
+                            max: 1.0,
+                            title: {
+                                display: true,
+                                text: 'Score'
+                            }
+                        }
+                    }
+                }
+            });
+            // Confusion Matrix
+            const cmCtx = document.getElementById('confusionMatrixChart').getContext('2d');
+            charts.confusionMatrix = new Chart(cmCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Predicted: No PU', 'Predicted: PU Present'],
+                    datasets: [{
+                        label: 'Actual: No PU',
+                        data: [sampleData.confusionMatrix[0][0], sampleData.confusionMatrix[0][1]],
+                        backgroundColor: '#667eea'
+                    }, {
+                        label: 'Actual: PU Present',
+                        data: [sampleData.confusionMatrix[1][0], sampleData.confusionMatrix[1][1]],
+                        backgroundColor: '#feca57'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            stacked: true,
+                            title: {
+                                display: true,
+                                text: 'Count'
+                            }
+                        },
+                        y: {
+                            stacked: true
+                        }
+                    }
+                }
+            });
+            // ROC Curves (Example)
+            const rocCtx = document.getElementById('rocCurveChart').getContext('2d');
+            charts.rocCurve = new Chart(rocCtx, {
+                type: 'line',
+                data: {
+                    labels: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                    datasets: [{
+                        label: 'Random Forest',
+                        data: [0.0, 0.8, 0.92, 0.96, 0.98, 1.0],
+                        borderColor: '#667eea',
+                        tension: 0.2
+                    }, {
+                        label: 'Gradient Boosting',
+                        data: [0.0, 75, 0.88, 0.93, 0.97, 1.0],
+                        borderColor: '#4ecdc4',
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'False Positive Rate (FPR)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'True Positive Rate (TPR)'
+                            }
+                        }
+                    }
+                }
+            });
+            // Feature Importance
+            const fiCtx = document.getElementById('featureImportanceChart').getContext('2d');
+            charts.featureImportance = new Chart(fiCtx, {
+                type: 'bar',
+                data: {
+                    labels: sampleData.features,
+                    datasets: [{
+                        label: 'Feature Importance Score',
+                        data: sampleData.importance,
+                        backgroundColor: '#764ba2'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Importance'
+                            }
+                        }
+                    }
+                }
+            });
+            // Feature Correlation (Example)
+            const corrCtx = document.getElementById('correlationChart').getContext('2d');
+            charts.correlation = new Chart(corrCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Feature A', 'Feature B', 'Feature C'],
+                    datasets: [{
+                        label: 'Correlation with Target',
+                        data: [0.85, 0.62, 0.78],
+                        backgroundColor: ['#667eea', '#4ecdc4', '#feca57']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Correlation'
+                            }
+                        }
+                    }
+                }
+            });
+            // Feature Distribution (Example)
+            const fdCtx = document.getElementById('featureDistChart').getContext('2d');
+            charts.featureDist = new Chart(fdCtx, {
+                type: 'line',
+                data: {
+                    labels: ['0', '10', '20', '30', '40', '50'],
+                    datasets: [{
+                        label: 'Distribution of SNR',
+                        data: [5, 15, 25, 30, 18, 7],
+                        backgroundColor: 'rgba(118, 75, 162, 0.4)',
+                        borderColor: '#764ba2',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'SNR (dB)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Frequency'
+                            }
+                        }
+                    }
+                }
+            });
+            // Pfa vs Pd Trade-off
+            const pfaPdCtx = document.getElementById('pfaPdChart').getContext('2d');
+            charts.pfaPd = new Chart(pfaPdCtx, {
+                type: 'line',
+                data: {
+                    labels: sampleData.pfaPdData.pfa,
+                    datasets: [{
+                        label: 'Pd vs Pfa',
+                        data: sampleData.pfaPdData.pd,
+                        borderColor: '#ff6b6b',
+                        backgroundColor: 'rgba(255, 107, 107, 0.2)',
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Probability of False Alarm (Pfa)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Probability of Detection (Pd)'
+                            }
+                        }
+                    }
+                }
+            });
+            // Latitude Distribution
+            const latencyCtx = document.getElementById('latencyChart').getContext('2d');
+            charts.latency = new Chart(latencyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Sample 1', 'Sample 2', 'Sample 3', 'Sample 4', 'Sample 5', 'Sample 6', 'Sample 7', 'Sample 8', 'Sample 9', 'Sample 10'],
+                    datasets: [{
+                        label: 'Latency (ms)',
+                        data: sampleData.latencyData,
+                        backgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Latency (ms)'
+                            }
+                        }
+                    }
+                }
+            });
+            // Frequency Band Analysis
+            const freqCtx = document.getElementById('frequencyChart').getContext('2d');
+            charts.frequency = new Chart(freqCtx, {
+                type: 'pie',
+                data: {
+                    labels: sampleData.frequencyData.labels,
+                    datasets: [{
+                        label: 'Usage Count',
+                        data: sampleData.frequencyData.data,
+                        backgroundColor: ['#667eea', '#4ecdc4', '#feca57']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }
+            });
+            // SNR Analysis
+            const snrCtx = document.getElementById('snrChart').getContext('2d');
+            charts.snr = new Chart(snrCtx, {
+                type: 'bar',
+                data: {
+                    labels: sampleData.snrData.labels,
+                    datasets: [{
+                        label: 'Occurrences',
+                        data: sampleData.snrData.data,
+                        backgroundColor: '#764ba2'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Count'
+                            }
+                        }
+                    }
+                }
+            });
+            // Target Distribution
+            const targetDistCtx = document.getElementById('targetDistChart').getContext('2d');
+            charts.targetDist = new Chart(targetDistCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: sampleData.targetDist.labels,
+                    datasets: [{
+                        label: 'Class Distribution',
+                        data: sampleData.targetDist.data,
+                        backgroundColor: ['#4ecdc4', '#ff6b6b']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }
+            });
+            // PU Presence Analysis
+            const puPresenceCtx = document.getElementById('puPresenceChart').getContext('2d');
+            charts.puPresence = new Chart(puPresenceCtx, {
+                type: 'line',
+                data: {
+                    labels: sampleData.puPresence.labels,
+                    datasets: [{
+                        label: 'PU Presence Count',
+                        data: sampleData.puPresence.data,
+                        borderColor: '#feca57',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Count'
+                            }
+                        }
+                    }
+                }
+            });
+            // QoS Time Series Chart
+            const qosCtx = document.getElementById('qosTimeSeriesChart').getContext('2d');
+            charts.qosTimeSeries = new Chart(qosCtx, {
+                type: 'line',
+                data: {
+                    labels: sampleData.qosData.labels,
+                    datasets: [{
+                        label: 'Throughput (%)',
+                        data: sampleData.qosData.throughput,
+                        borderColor: '#4ecdc4',
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Latency (ms)',
+                        data: sampleData.qosData.latency,
+                        borderColor: '#667eea',
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }, {
+                        label: 'Call Drop Rate (%)',
+                        data: sampleData.qosData.dropRate,
+                        borderColor: '#ff6b6b',
+                        tension: 0.4,
+                        yAxisID: 'y2'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Throughput (%)'
+                            },
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Latency (ms)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        },
+                        y2: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Drop Rate (%)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+            // Successful Connections
+            const connCtx = document.getElementById('connectionsChart').getContext('2d');
+            charts.connections = new Chart(connCtx, {
+                type: 'bar',
+                data: {
+                    labels: sampleData.connections.labels,
+                    datasets: [{
+                        label: 'Connections',
+                        data: sampleData.connections.data,
+                        backgroundColor: ['#667eea', '#764ba2', '#4ecdc4', '#feca57']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Count'
+                            }
+                        }
+                    }
+                }
+            });
+            // Interference Events
+            const interCtx = document.getElementById('interferenceChart').getContext('2d');
+            charts.interference = new Chart(interCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: sampleData.interference.labels,
+                    datasets: [{
+                        label: 'Interference Level',
+                        data: sampleData.interference.data,
+                        backgroundColor: ['#4CAF50', '#FFC107', '#E53935']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }
+            });
+            // Bandwidth Utilization
+            const bandCtx = document.getElementById('bandwidthChart').getContext('2d');
+            charts.bandwidth = new Chart(bandCtx, {
+                type: 'bar',
+                data: {
+                    labels: sampleData.bandwidth.labels,
+                    datasets: [{
+                        label: 'Utilization (%)',
+                        data: sampleData.bandwidth.data,
+                        backgroundColor: '#764ba2'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Utilization (%)'
+                            }
+                        }
+                    }
+                }
+            });
+            // User Specific Chart
+            const userCtx = document.getElementById('userSpecificChart').getContext('2d');
+            charts.userSpecific = new Chart(userCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'User Performance Metric',
+                        data: [],
+                        borderColor: '#667eea',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Performance Score'
+                            },
+                            min: 0.6,
+                            max: 1.0
+                        }
+                    }
+                }
+            });
+        }
+        function startLiveDataFeed() {
+            // Live data feed is now handled by CSV upload
+            liveDataInterval = null;
+        }
+        function refreshData() {
+            showMessage('Please upload a new SDR data file to refresh the analysis.', 'warning');
+        }
+        // Update main metrics
+        function updateMetrics() {
+            document.getElementById('overallAccuracy').textContent = `${(Math.random() * 5 + 90).toFixed(1)}%`;
+            document.getElementById('avgLatency').textContent = `${(Math.random() * 5 + 10).toFixed(1)}ms`;
+            document.getElementById('callDropRate').textContent = `${(Math.random() * 0.5 + 0.5).toFixed(1)}%`;
+            document.getElementById('throughput').textContent = `${(Math.random() * 10 + 80).toFixed(1)}%`;
+            document.getElementById('livePredictions').textContent = Math.floor(Math.random() * 100) + 100;
+            document.getElementById('spectrumUtilization').textContent = `${(Math.random() * 20 + 70).toFixed(0)}%`;
+            const interferenceLevel = Math.random();
+            if (interferenceLevel < 0.2) {
+                document.getElementById('interferenceLevel').textContent = 'High';
+            } else if (interferenceLevel < 0.6) {
+                document.getElementById('interferenceLevel').textContent = 'Medium';
+            } else {
+                document.getElementById('interferenceLevel').textContent = 'Low';
+            }
+        }
+        // Handle threshold sliders
+        function updateThreshold(type, value) {
+            const displayId = `${type}Value`;
+            document.getElementById(displayId).textContent = value;
+            console.log(`Updated ${type} threshold to ${value}`);
+        }
+        // Handle file upload
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const uploadStatus = document.getElementById('uploadStatus');
+            if (file) {
+                console.log(`File selected: ${file.name}`);
+                uploadStatus.style.display = 'flex';
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const contents = e.target.result;
+                    processSDRData(contents);
+                    setTimeout(() => {
+                        uploadStatus.style.display = 'none';
+                        showMessage(`SDR data from ${file.name} loaded and analyzed.`);
+                        showTab('frequencies', document.querySelector('.tab:nth-child(2)'));
+                    }, 2000);
+                };
+                reader.readAsText(file);
+            }
+        }
+        
+        // Function to process SDR data from CSV
+        function processSDRData(csvString) {
+            const lines = csvString.split('\n').slice(1).filter(line => line.trim() !== '');
+            let idCounter = 1;
+            const signals = lines.map(line => {
+                const [puPresence, puSignalStrength, frequency, snr1, snr2, snr3, clusterId, clusterSize, pd, pfa, pmd, predictedGap, target] = line.split(',').map(v => v.trim() === '' ? null : Number(v));
+                const status = puSignalStrength > -80 ? 'Clustered' : 'Free';
+                return {
+                    id: idCounter++,
+                    frequency,
+                    bandwidth: 'N/A',
+                    power: puSignalStrength,
+                    status
+                };
+            }).filter(s => s.frequency !== null);
+            
+            currentFrequencyData = signals;
+            freeBandUsage = {};
+            
+            // Calculate how many free bandwidths we need
+            const clusteredSignals = currentFrequencyData.filter(s => s.status === 'Clustered');
+            const freeSignals = currentFrequencyData.filter(s => s.status === 'Free');
+            
+            // Calculate required free bandwidths
+            const requiredBandwidths = Math.ceil(clusteredSignals.length / signalsPerBandwidth);
+            
+            // Generate free bandwidths
+            availableFreeBandwidths = [];
+            for (let i = 0; i < requiredBandwidths; i++) {
+                // Generate a unique frequency for each bandwidth
+                const baseFrequency = 1000 + (i * 100); // Start at 1000 MHz and increment by 100 MHz
+                availableFreeBandwidths.push(baseFrequency);
+                
+                // Initialize usage for this bandwidth
+                freeBandUsage[baseFrequency] = 0;
+            }
+            
+            updateFrequencyTable();
+            updateRerouteDropdown();
+        }
+
+        // Function to update the frequency table
+        function updateFrequencyTable() {
+            const tableBody = document.getElementById('frequencyTableBody');
+            tableBody.innerHTML = '';
+            currentFrequencyData.forEach(signal => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="checkbox" class="signal-checkbox" data-id="${signal.id}" ${signal.status === 'Clustered' ? '' : 'disabled'}></td>
+                    <td>${signal.id}</td>
+                    <td>${signal.frequency}</td>
+                    <td>${signal.bandwidth}</td>
+                    <td><span class="status-${signal.status.toLowerCase()}">${signal.status}</span></td>
+                    <td>
+                        ${signal.status === 'Clustered' ? `<button class="btn btn-secondary" onclick="rerouteSingle(${signal.id})">Reroute</button>` : ''}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        // Function to populate the reroute dropdown with free bands
+        function updateRerouteDropdown() {
+            const select = document.getElementById('rerouteBandwidthSelect');
+            select.innerHTML = '';
+            
+            if (availableFreeBandwidths.length === 0) {
+                const option = document.createElement('option');
+                option.textContent = 'No free bands available';
+                option.disabled = true;
+                select.appendChild(option);
+            } else {
+                availableFreeBandwidths.forEach(band => {
+                    const usage = freeBandUsage[band] || 0;
+                    const capacity = signalsPerBandwidth;
+                    const availableSlots = capacity - usage;
+                    
+                    const option = document.createElement('option');
+                    option.value = band;
+                    option.textContent = `${band} MHz (${availableSlots}/${capacity} available)`;
+                    select.appendChild(option);
+                });
+            }
+        }
+        // Function to reroute a single clustered signal
+        function rerouteSingle(signalId) {
+            const signalToReroute = currentFrequencyData.find(s => s.id === signalId);
+            if (!signalToReroute) return;
+            
+            if (availableFreeBandwidths.length > 0) {
+                // Find an available free band
+                let targetFrequency = null;
+                for (const band of availableFreeBandwidths) {
+                    const usage = freeBandUsage[band] || 0;
+                    if (usage < signalsPerBandwidth) {
+                        targetFrequency = band;
+                        break;
+                    }
+                }
+
+                if (targetFrequency) {
+                    // Update the signal's properties
+                    signalToReroute.status = 'Free';
+                    signalToReroute.frequency = targetFrequency;
+                    
+                    // Increment the usage counter for the target frequency
+                    freeBandUsage[targetFrequency] = (freeBandUsage[targetFrequency] || 0) + 1;
+
+                    showMessage(`Signal ${signalId} rerouted to a free band at ${targetFrequency} MHz.`);
+                    updateFrequencyTable();
+                    updateRerouteDropdown();
+                } else {
+                    showMessage('All available free bands have reached their rerouting capacity.', 'warning');
+                }
+            } else {
+                showMessage('No free bandwidths available for rerouting.', 'warning');
+            }
+        }
+        // Function to reroute all clustered signals
+        function rerouteAll() {
+            if (availableFreeBandwidths.length === 0) {
+                showMessage('No free bandwidths available for rerouting.', 'warning');
+                return;
+            }
+
+            const clusteredSignals = currentFrequencyData.filter(s => s.status === 'Clustered');
+            let reroutedCount = 0;
+            let bandwidthIndex = 0;
+
+            for (const signal of clusteredSignals) {
+                let foundBand = false;
+                
+                // Try to find a band with available capacity
+                for (let i = 0; i < availableFreeBandwidths.length; i++) {
+                    const freq = availableFreeBandwidths[bandwidthIndex % availableFreeBandwidths.length];
+                    const usage = freeBandUsage[freq] || 0;
+                    
+                    if (usage < signalsPerBandwidth) {
+                        signal.status = 'Free';
+                        signal.frequency = freq;
+                        freeBandUsage[freq] = (freeBandUsage[freq] || 0) + 1;
+                        reroutedCount++;
+                        foundBand = true;
+                        bandwidthIndex++;
+                        break;
+                    }
+                    bandwidthIndex++;
+                }
+                
+                // If no band found for this signal, continue to next signal
+                if (!foundBand) {
+                    // All bands are full, stop rerouting further signals
+                    break;
+                }
+            }
+
+            if (reroutedCount === 0) {
+                showMessage('Not enough free bands to reroute clustered signals.', 'warning');
+            } else {
+                showMessage(`Successfully rerouted ${reroutedCount} clustered signals.`);
+            }
+            updateFrequencyTable();
+            updateRerouteDropdown();
+        }
+        // Function to reroute selected signals
+        function rerouteSelected() {
+            const selectedFrequency = parseFloat(document.getElementById('rerouteBandwidthSelect').value);
+            if (!selectedFrequency || isNaN(selectedFrequency)) {
+                showMessage('Please select a free bandwidth to reroute signals to.', 'warning');
+                return;
+            }
+
+            const selectedSignalIds = Array.from(document.querySelectorAll('.signal-checkbox:checked'))
+                .map(cb => parseInt(cb.dataset.id));
+            if (selectedSignalIds.length === 0) {
+                showMessage('Please select at least one signal to reroute.', 'warning');
+                return;
+            }
+
+            const usage = freeBandUsage[selectedFrequency] || 0;
+            const availableSlots = signalsPerBandwidth - usage;
+            
+            if (selectedSignalIds.length > availableSlots) {
+                showMessage(`Only ${availableSlots} slots available in this bandwidth. Please select fewer signals.`, 'warning');
+                return;
+            }
+
+            let reroutedCount = 0;
+            for (const signal of currentFrequencyData) {
+                if (selectedSignalIds.includes(signal.id) && signal.status === 'Clustered') {
+                    signal.status = 'Free';
+                    signal.frequency = selectedFrequency;
+                    reroutedCount++;
+                }
+            }
+
+            // Update usage
+            freeBandUsage[selectedFrequency] = (freeBandUsage[selectedFrequency] || 0) + reroutedCount;
+
+            if (reroutedCount > 0) {
+                showMessage(`Successfully rerouted ${reroutedCount} selected signals to ${selectedFrequency} MHz.`, 'success');
+            } else {
+                showMessage('No clustered signals were selected or available for rerouting.', 'warning');
+            }
+
+            updateFrequencyTable();
+            updateRerouteDropdown();
+        }
+        // Function to select/deselect all checkboxes
+        function toggleSelectAll(source) {
+            const checkboxes = document.querySelectorAll('.signal-checkbox');
+            checkboxes.forEach(checkbox => {
+                if (!checkbox.disabled) {
+                    checkbox.checked = source.checked;
+                }
+            });
+        }
+        // Change active model
+        function changeModel() {
+            const modelSelect = document.getElementById('modelSelect');
+            currentModel = modelSelect.value;
+            console.log(`Active model changed to: ${currentModel}`);
+        }
+        // Retrain model
+        function retrainModel() {
+            const modelName = document.getElementById('modelSelect').options[document.getElementById('modelSelect').selectedIndex].text;
+            showMessage(`Simulating retraining of the ${modelName} model. This may take some time.`);
+            document.getElementById('systemStatus').textContent = 'Retraining...';
+            document.querySelector('.status-indicator i').classList.remove('fa-circle');
+            document.querySelector('.status-indicator i').classList.add('loading');
+            setTimeout(() => {
+                showMessage('Retraining complete! Model performance has been updated.');
+                document.getElementById('systemStatus').textContent = 'System Active';
+                document.querySelector('.status-indicator i').classList.remove('loading');
+                document.querySelector('.status-indicator i').classList.add('fa-circle');
+                updateMetrics();
+            }, 5000);
+        }
+        // Apply filters
+        function applyFilter() {
+            const freq = document.getElementById('frequencyFilter').value;
+            const time = document.getElementById('timeFilter').value;
+            showMessage(`Filtering data for ${freq} and ${time} range.`);
+        }
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('frequencyFilter').value = 'all';
+            document.getElementById('timeFilter').value = '1h';
+            applyFilter();
+        }
+        // User search
+        function searchUser() {
+            const userId = document.getElementById('userSearch').value.toLowerCase();
+            const userInfoDiv = document.getElementById('userInfo');
+            const userChart = charts.userSpecific;
+            if (userData[userId]) {
+                userInfoDiv.classList.remove('alert-warning');
+                userInfoDiv.classList.add('alert-success');
+                userInfoDiv.innerHTML = `<i class="fas fa-user-check"></i> User <strong>${userId}</strong> found. Displaying performance data.`;
+                userChart.data.labels = userData[userId].labels;
+                userChart.data.datasets[0].data = userData[userId].data;
+                userChart.data.datasets[0].label = `Accuracy for User ${userId}`;
+                userChart.update();
+            } else if (userId === '') {
+                userInfoDiv.classList.remove('alert-success');
+                userInfoDiv.classList.add('alert-warning');
+                userInfoDiv.innerHTML = `<i class="fas fa-info-circle"></i> Enter a User ID above to view specific user analytics`;
+                userChart.data.labels = [];
+                userChart.data.datasets[0].data = [];
+                userChart.update();
+            } else {
+                userInfoDiv.classList.remove('alert-success');
+                userInfoDiv.classList.add('alert-warning');
+                userInfoDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> User <strong>${userId}</strong> not found.`;
+                userChart.data.labels = [];
+                userChart.data.datasets[0].data = [];
+                userChart.update();
+            }
+        }
+        function loadDummySDRData() {
+            const dummyCSV = `PU_Presence,PU_Signal_Strength,Frequency_Band,SNR_SU1,SNR_SU2,SNR_SU3,Cluster_ID,Cluster_Size,Pd,Pfa,Pmd,Predicted_Gap,Target
+1,-55.09,1800,11.54,21.82,19.30,40,12,0.88,0.09,0.05,0,0
+1,-63.19,5000,11.17,24.92,25.14,7,4,0.87,0.08,0.04,0,0
+0,-85.00,5000,27.66,22.00,15.55,8,3,0.92,0.11,0.06,0,0
+1,-78.12,1800,9.48,7.09,29.39,8,4,0.98,0.08,0.18,0,0
+0,-95.00,2400,25.00,10.28,19.34,23,8,0.83,0.06,0.18,0,0
+1,-71.33,2400,18.82,23.81,13.54,29,6,0.95,0.07,0.08,0,0
+0,-98.00,900,15.67,18.99,21.22,1,5,0.91,0.05,0.12,0,0
+1,-68.50,1800,22.10,25.05,17.45,15,9,0.93,0.09,0.07,0,0
+0,-105.00,5000,13.88,14.50,23.76,3,2,0.89,0.10,0.09,0,0
+1,-59.21,2400,19.22,20.15,18.01,22,10,0.96,0.04,0.06,0,0`;
+            processSDRData(dummyCSV);
+        }
+        // Initialize the dashboard on page load
+        window.onload = initializeDashboard;
+    </script>
+</body>
+</html>
